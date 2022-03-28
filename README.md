@@ -1,4 +1,5 @@
 # libGLGUI_GSLAM
+    通过Dear ImGui 和 OpenGL编写的带UI的渲染器
 
 ## 目录结构
 ```
