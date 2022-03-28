@@ -5,7 +5,15 @@
 
 #include "../libGUI/GUI.h"
 #include "utils/shader/glShader.hpp"
-#include "utils/camrea/glCamera.hpp"
+#include "utils/camera/glCamera.hpp"
+#include "utils/mesh/glMesh.hpp"
+#include "utils/glUtils.hpp"
+
+#ifdef COMPILE_WITH_FREETYPE
+#include <ft2build.h>
+#include <memory>
+#include FT_FREETYPE_H
+#endif
 
 namespace  GLGUI
 {
@@ -124,7 +132,7 @@ namespace  GLGUI
             std::map<std::string, glUtil::Shader*> glShaders;
             std::map<std::string, glUtil::Model_base*> glObjests;
             std::map<GLchar, Character> Characters;
-            std::map<int, bool> bKeyProcessDinished;
+            std::map<int, bool> bKeyProcessFinished;
             FPSManager *fps_;
 
             bool bShowGrid, bShowFPS;

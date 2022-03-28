@@ -73,34 +73,34 @@ namespace GLGUI
             GLFWWindowContainer* window_;
 
             // 键盘回调函数
-            virtual void key_callback_impl(GLFWwindow* window, int key, int scancode, int action, int mods);
             static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
                 getInstance().key_callback_impl(window, key, scancode, action, mods);
             };
+            virtual void key_callback_impl(GLFWwindow* window, int key, int scancode, int action, int mods);
 
             // 鼠标按键回调函数
-            virtual void mouse_button_callback_impl(GLFWwindow* window, int button, int action, int mods);
             static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
-                getInstance().mouse_button_callback(window, button, action, mods);
+                getInstance().mouse_button_callback_impl(window, button, action, mods);
             };
+            virtual void mouse_button_callback_impl(GLFWwindow* window, int button, int action, int mods);
 
             // 鼠标位置回调函数
-            virtual void mouse_callback_impl(GLFWwindow* window, double xpos, double ypos);
             static void mouse_callback(GLFWwindow* window, double xpos, double ypos){
                 getInstance().mouse_callback_impl(window, xpos, ypos);
             };
+            virtual void mouse_callback_impl(GLFWwindow* window, double xpos, double ypos);
 
             // 鼠标滚轮回调函数
-            virtual void scroll_callback_impl(GLFWwindow* window, double xoffset, double yoffset);
             static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
                 getInstance().scroll_callback_impl(window, xoffset, yoffset);
             };
+            virtual void scroll_callback_impl(GLFWwindow* window, double xoffset, double yoffset);
 
             // 渲染画面大小回调函数
-            virtual void framebuffer_size_callback_impl(GLFWwindow* window, int width, int height);
             static void framebuffer_size_callback(GLFWwindow* window, int width, int height){
                 getInstance().framebuffer_size_callback_impl(window, width, height);
             };
+            virtual void framebuffer_size_callback_impl(GLFWwindow* window, int width, int height);
 
             // 错误或调函数
             virtual void error_callback_impl(int error, const char* description);

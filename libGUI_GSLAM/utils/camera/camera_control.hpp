@@ -126,7 +126,7 @@ namespace GLGUI
                                                         ScrollSensitivity(SCROLLSENSITIVITY)
             {
                 Position = position;
-                WorlfUp = up;
+                WorldUp = up;
                 left_button_down = middle_button_down = right_button_down = false;
                 updateCameraVectors();
             }
@@ -148,7 +148,7 @@ namespace GLGUI
                 if(button == 1){
                     right_button_down = down;
                 }
-                drag_last_pos = o;
+                drag_last_pos = p;
             }
 
             // 拖拽
@@ -165,7 +165,7 @@ namespace GLGUI
                 }
 
                 if (middle_button_down) {
-                   Position = glm::angleAxis<float>(float(theta+M_PI_2), glm::vec3(0,0,1)) * glm::vec3(-rel[0],rel[1],0.f)*glm::vec3(distance*1e-3f);
+                   //Position = glm::angleAxis<float>(float(theta+M_PI_2), glm::vec3(0,0,1)) * glm::vec3(-rel[0],rel[1],0.f)*glm::vec3(distance*1e-3f);
                 }
                 drag_last_pos = p;
             }
@@ -273,7 +273,7 @@ namespace GLGUI
             }
         
         private:
-            bool left_button_down, middlw_button_down, right_button_down;
+            bool left_button_down, middle_button_down, right_button_down;
             glm::vec2 drag_last_pos{};
 
             /**
@@ -314,7 +314,7 @@ namespace GLGUI
                 left_button_down = middle_button_down = right_button_down = false;
             };
 
-            ArcCameraContorl(float posX, 
+            ArcCameraControl(float posX, 
                              float posY, 
                              float posZ, 
                              float upX, 

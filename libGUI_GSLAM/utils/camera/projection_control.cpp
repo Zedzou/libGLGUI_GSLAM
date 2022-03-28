@@ -42,18 +42,19 @@ glm::mat4 ProjectionControl::projection_matrix(float fx,
 
 glm::mat4 ProjectionControl::projection_matrix() const 
 {
-    double aspect_ratio = float(width_)/float(height_);
-    glm::mat4 proj;
-    if(projection_mode == 0) {
-        proj = glm::perspective<float>(glm::radians(fovy), (float) width_ / (float) height_, near, far);
-    } else {
-        proj = glm::ortho<float>(-width/2.f,width/2.f,-width/2.f/aspect_ratio, width/2.f/aspect_ratio, near,far);
-    }
-    return proj;
+  double aspect_ratio = float(width_)/float(height_);
+  glm::mat4 proj;
+  if(projection_mode == 0) {
+      proj = glm::perspective<float>(glm::radians(fovy), (float) width_ / (float) height_, near, far);
+  } 
+  else {
+      proj = glm::ortho<float>(-width/2.f,width/2.f,-width/2.f/aspect_ratio, width/2.f/aspect_ratio, near,far);
+  }
+  return proj;
 }
 
 void ProjectionControl::show() {
-    bShowUI = true;
+  bShowUI = true;
 }
 
 void ProjectionControl::draw_ui() 
@@ -67,12 +68,12 @@ void ProjectionControl::draw_ui()
   ImGui::Combo("Mode", &projection_mode, modes, IM_ARRAYSIZE(modes));
   if(projection_mode == 0){
     ImGui::DragFloat("FOV", &fovy, 0.1f, 1.0f, 180.0f);
-  } else {
+  } 
+  else {
     ImGui::DragFloat("Width", &width, 0.1f, 1.0f, 1000.0f);
   }
 
   ImGui::DragFloat("Near", &near, 1.0f, 0.1f, far);
   ImGui::DragFloat("Far", &far, 1.0f, near, 10000.0f);
-
   ImGui::End();
 }

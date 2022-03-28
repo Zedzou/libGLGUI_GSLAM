@@ -21,7 +21,7 @@ namespace GLGUI
             void show();
 
             float fovy;
-            float bShowUI;
+            bool bShowUI;
             float near;
             float far;
 
@@ -29,5 +29,5 @@ namespace GLGUI
             unsigned int width_, height_;
             int projection_mode;
             float width;
-    }
-}
+    };
+};
