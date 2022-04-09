@@ -1,50 +1,52 @@
-#
-# Try to find FreeType2 library and include path.
-# Once done this will define
-#
-# FreeType2_FOUND
-# FreeType2_INCLUDE_DIRS
-# FreeType2_LIBRARIES
-#
-
 SET(NAME FreeType2)
-SET(URL "git@github.com:aseprite/freetype2.git")
+SET(URL "git@github.com:Zedzou/FreeType2.git")
 SET(${NAME}_INSTALL_DIR  ${CMAKE_BINARY_DIR}/external/${NAME})
-SET(${NAME}_DOWNLOADED 0)
-#IF(NOT ${NAME}_FOUND)
-  find_package(Git)
-  IF(NOT EXISTS ${${NAME}_INSTALL_DIR})
-    file(MAKE_DIRECTORY ${${NAME}_INSTALL_DIR})
-  ENDIF()
 
-  execute_process(
-          COMMAND ${GIT_EXECUTABLE} clone ${URL} ${NAME}
-          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/external
-  )
+# 编译FreeType2
+IF(NOT ${NAME}_DOWNLOADED)
 
-  IF(NOT EXISTS ${${NAME}_INSTALL_DIR}/build)
-    file(MAKE_DIRECTORY ${${NAME}_INSTALL_DIR}/build)
-  ENDIF()
+        find_package(Git)
+        IF(NOT EXISTS ${${NAME}_INSTALL_DIR})
+                file(MAKE_DIRECTORY ${${NAME}_INSTALL_DIR})
+        ENDIF()
 
-  execute_process(
-          COMMAND cmake -DCMAKE_INSTALL_PREFIX=${${NAME}_INSTALL_DIR}/bin ..
-          WORKING_DIRECTORY ${${NAME}_INSTALL_DIR}/build
-  )
-  execute_process(
-          COMMAND make install
-          WORKING_DIRECTORY ${${NAME}_INSTALL_DIR}/build
-  )
-  SET(${NAME}_DOWNLOADED 1 CACHE STRING " ")
-  SET(${NAME}_FOUND 1 CACHE STRING " ")
-  #SET(${NAME}_INCLUDE_DIR ${${NAME}_INSTALL_DIR}/build/include CACHE STRING " ")
-#ENDIF()
+        # git clone 
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} clone ${URL} ${NAME}
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/external
+        )
 
+        # mkdir build
+        if (NOT EXISTS ${${NAME}_INSTALL_DIR}/build)
+                file(MAKE_DIRECTORY ${${NAME}_INSTALL_DIR}/build)
+        endif()
+
+        # mkdir bin
+        if (NOT EXISTS ${${NAME}_INSTALL_DIR}/bin)
+                file(MAKE_DIRECTORY ${${NAME}_INSTALL_DIR}/bin)
+        endif()
+
+        # cmake -DCMAKE_INSTALL_PREFIX=${${NAME}_INSTALL_DIR}/bin
+        execute_process(
+                COMMAND cmake -DCMAKE_INSTALL_PREFIX=${${NAME}_INSTALL_DIR}/bin ..
+                WORKING_DIRECTORY ${${NAME}_INSTALL_DIR}/build
+        )
+
+        # make
+        execute_process(
+                COMMAND make
+                WORKING_DIRECTORY ${${NAME}_INSTALL_DIR}/build
+        )
+
+        # make install
+        execute_process(
+                COMMAND make install
+                WORKING_DIRECTORY ${${NAME}_INSTALL_DIR}/build
+        )
+
+        set(${NAME}_DOWNLOADED 1 CACHE STRING "Set 1")
+  
+ENDIF()
+
+# 设置FreeType2 路径
 FIND_PACKAGE(freetype REQUIRED PATHS ${${NAME}_INSTALL_DIR}/bin/lib/cmake NO_DEFAULT_PATH)
-
-if(FreeType2_FOUND)
-  message(STATUS "Found FreeType2: ${FreeType2_INCLUDE_DIR}")
-else(FreeType2_FOUND)
-  if (NOT FreeType2_FIND_QUIETLY)
-    message(FATAL_ERROR "could NOT find FreeType2")
-  endif (NOT FreeType2_FIND_QUIETLY)
-endif(FreeType2_FOUND)

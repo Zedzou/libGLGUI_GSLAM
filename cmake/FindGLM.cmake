@@ -7,7 +7,6 @@
 #set(glm_FOUND 0)
 IF(NOT glm_FOUND)
     find_package(Git)
-    #include(FindPythonInterp)
 
     SET(NAME glm)
     SET(URL "git@github.com:g-truc/glm.git")

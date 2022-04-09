@@ -1,4 +1,4 @@
-INCLUDE(../cmake/UseImGUI.cmake)
+include(../cmake/UseImGUI.cmake)
 
 SET(sources GL.cpp ../ImGuiExtension/source/tinyfiledialogs.c )
 SET(headers GL.h ../ImGuiExtension/include/ImGuiExtension/tinyfiledialogs.h )

@@ -130,7 +130,7 @@ void GL_base::run()
         int display_w, display_h;
         glfwGetFramebufferSize(window_->window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         drawGL();

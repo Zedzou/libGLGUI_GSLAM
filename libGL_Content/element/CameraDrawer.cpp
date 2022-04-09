@@ -41,18 +41,18 @@ void CameraDrawer::Init()
                           0.5f*size,  0.5f*size, 1*size,
                          -0.5f*size,  0.5f*size, 1*size};
 
-    // // screen quad VAO
-    // unsigned int &quadVAO = VAO;
-    // unsigned int &quadVBO = VBO;
-    // glGenVertexArrays(1, &quadVAO);
-    // glGenBuffers(1, &quadVBO);
-    // glBindVertexArray(quadVAO);
-    // glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
-    // glEnableVertexAttribArray(1);
-    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) (2 * sizeof(float)));
+    // screen quad VAO
+    unsigned int &quadVAO = VAO;
+    unsigned int &quadVBO = VBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) (2 * sizeof(float)));
 
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO);
@@ -68,17 +68,17 @@ void CameraDrawer::Init()
     glBindVertexArray(0);
 
     // Init shader
-    mShader = std::make_unique<glUtil::Shader>(vsShader,fsShader);
+    mShader = std::make_unique<GLUtils::Shader>(vsShader,fsShader);
     mShader->use();
     mShader->set("color", color);
     mShader->set("model", glm::mat4(1.f));
     bInited=true;
+    
 }
 
 void CameraDrawer::Draw(Eigen::Matrix4f model, const Eigen::Matrix4f &projection, const Eigen::Matrix4f &viewMatrix) 
 {
     assert(bInited);
-    model = model * mScale;// glm::scale(model,glm::vec3(scale, scale, scale));    // it's a bit too big for our scene, so scale it down
 
     mShader->use();
     mShader->set("color", color);
@@ -87,7 +87,6 @@ void CameraDrawer::Draw(Eigen::Matrix4f model, const Eigen::Matrix4f &projection
     mShader->set("projection",projection);
 
     glBindVertexArray(VAO);
-    glLineWidth(3);
+    glLineWidth(20);
     glDrawElements(GL_LINES, 16, GL_UNSIGNED_INT, 0);
-    glLineWidth(1);
 }

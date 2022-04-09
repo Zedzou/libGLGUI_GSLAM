@@ -1,11 +1,3 @@
-# Find gl3w
-# Use gl3w as an external project
-#
-###
-# gl3w_FOUND
-# gl3w_SOURCE return the source file location
-# gl3w_INCLUDE_DIRS
-
 IF(NOT EXISTS "${gl3w_INSTALL_DIR}/src/gl3w.c")
     find_package(Git)
     SET(PYTHON_VERSION_MAJOR 3)

@@ -15,64 +15,72 @@ CoordinateAxis::~CoordinateAxis()
 
 void CoordinateAxis::Init()
 {
-    std::string vsShader = "version 330\n"
-                          "layout(location=0) in vec3 position;\n"
-                          "uniform mat4 model;\n"
-                          "uniform mat4 view;\n"
-                          "uniform mat4 projection;\n"
-                          "void main():{\n"
-                          "    gl_Position = projection * view * model * vec4(position, 1.0);\n"
-                          "}\n";
+    const char* vsShader = "#version 330 core\n"
+                           "layout(location=0) in vec3 position;\n"
+                           "layout(location=1) in vec3 acolor;\n"
+                           "out vec3 fColor;\n"
+                           "uniform mat4 model;\n"      // uniform设置model：渲染的物体旋转平移转换矩阵
+                           "uniform mat4 view;\n"       // uniform设置view: 视角矩阵
+                           "uniform mat4 projection;\n" // uniform设置projection:投影矩阵
+                           "void main()\n"
+                           "{\n"
+                           "    gl_Position = projection * view * model * vec4(position, 1.0);\n"
+                           "    fColor = acolor;\n"
+                           "}\0";
     
-    std::string fsShader = "version 330\n"
-                          "out vec4 FragColor;\n"
-                          "uniform vec4 color;\n"
-                          "void main():{\n"
-                          "    FragColor=color;\n"
-                          "}\n";
+    const char* fsShader = "#version 330 core\n"
+                           "in vec3 fColor;\n"
+                           "out vec4 FragColor;\n"
+                           "void main()\n"
+                           "{\n"
+                           "    FragColor=vec4(fColor, 1.0f);\n"
+                           "}\n\0";
     
     const float size = 0.5f;
-    float vertices[] = {0.0f,      0.0f,      0.0f,
-                        1.0f*size, 0.0f,      0.0f,
-                        0.0f,      1.0f*size, 0.0f,
-                        0.0f,      0.0f,      1.0f*size};
+    float vertices[] = {0.0f,      0.0f,      0.0f,      1.0f, 0.0f, 0.0f,
+                        1.0f*size, 0.0f,      0.0f,      1.0f, 0.0f, 0.0f,  // x轴
 
-    unsigned int indices[] = {0, 1, 0, 2, 0, 3};
+                        0.0f,      0.0f,      0.0f,      0.0f, 1.0f, 0.0f,
+                        0.0f,      1.0f*size, 0.0f,      0.0f, 1.0f, 0.0f,  // y轴
 
-    glGenBuffers(1, &VBO);
+                        0.0f,      0.0f,      0.0f,      0.0f, 0.0f, 1.0f,
+                        0.0f,      0.0f,      1.0f*size, 0.0f, 0.0f, 1.0f}; // Z轴
+
+    unsigned int indices[] = {0, 1, 2, 3, 4, 5};
+
     glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
+
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     glBindVertexArray(0);
-
-    // Init shader
-    mShader = std::make_unique<glUtil::Shader>(vsShader,fsShader);
+    glBindVertexArray(1);
+    
+    mShader = std::make_unique<GLUtils::Shader>(vsShader, fsShader);
     mShader->use();
-    mShader->set("color", color);
-    mShader->set("model", glm::mat4(1.f));
     bInited=true; // 控制析构函数删除缓存
 }
 
 void CoordinateAxis::Draw(Eigen::Matrix4f model, const Eigen::Matrix4f &projection, const Eigen::Matrix4f &viewMatrix)
 {
     assert(bInited);
-    model = model * mScale;// glm::scale(model,glm::vec3(scale, scale, scale));    // it's a bit too big for our scene, so scale it down
 
     mShader->use();
-    mShader->set("color", color);
-    mShader->set("model",model);
-    mShader->set("view",viewMatrix);
-    mShader->set("projection",projection);
+    mShader->set("model", model);
+    mShader->set("view", viewMatrix);
+    mShader->set("projection", projection);
 
     glBindVertexArray(VAO);
-    glLineWidth(3);
-    glDrawElements(GL_LINES, 16, GL_UNSIGNED_INT, 0);
-    glLineWidth(1);
+    glLineWidth(10);
+    glDrawArrays(GL_LINES, 0, 6);
 }

@@ -1,15 +1,19 @@
 #include "GL_Content.h"
+#include <iostream>
+#include <iomanip>
 using namespace GLRenderer;
 
-GL_Content::GL_Content(const std::string& WindowName, int width, int height):GLRenderer::GL_UI("CameraShow", 1280, 700)
+GL_Content::GL_Content(const std::string& WindowName, int width, int height):GLRenderer::GL_ContentBase(WindowName, width, height)
 {
     mCameraDrawer.Init();
     mCoordinateAxis.Init();
+    // mSurfelDrawer.Init();
+    DataLoader = new dataLoader();
 }
 
 GL_Content::~GL_Content()
 {
-
+    // delete DataLoader;
 }
 
 // UI设计(virtual override)
@@ -25,7 +29,7 @@ void GL_Content::drawUI()
 // gl渲染(virtual override)
 void GL_Content::drawGL()
 {
-    glClearColor(255.00f, 255.00f, 255.00f, 0.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
 
@@ -37,6 +41,7 @@ void GL_Content::drawGL()
 // mainProcess
 void GL_Content::mainProcess()
 {
+    // 窗口
     auto io  = ImGui::GetIO();
     size_t windowWidth = io.DisplaySize.x, windowHeight = io.DisplaySize.y;
     glViewport(0, 0, windowWidth, windowHeight);
@@ -46,23 +51,28 @@ void GL_Content::mainProcess()
     const Eigen::Matrix4f eigen_vm   = GLM2E<float, 4, 4>(glCam->camera_control_->GetViewMatrix());
     glEnable(GL_DEPTH_TEST);
     
-    // 获取pose
-    Eigen::Matrix4f pose;
-    pose << 0.989695, -0.00490942, 0.143107,  0.0,
-            0.141982, -0.0959712, -0.985206,  0.0,
-            0.0185709,0.995372,   -0.0942851, 0.0,
-            0,0,0,1;
-
     // 画相机
-    if(bDrawCam) {
-        mCameraDrawer.SetColor({0, 1, 1, 1});// green
-        mCameraDrawer.Draw(pose, eigen_proj, eigen_vm);
+    for (auto &pose_m:DataLoader->poseMap)
+    {
+        Eigen::Matrix4f pose;
+        pose = pose_m.second;
+        // 画相机
+        if(bDrawCam) {
+            mCameraDrawer.SetColor({0, 1, 1, 1});// green
+            mCameraDrawer.Draw(pose, eigen_proj, eigen_vm);
+        }
+
     }
+
+    Eigen::Matrix4f model;
+    model << 1.0f, 0.0f, 0.0f, 0.0,
+            0.0f, 1.0f, 0.0f, 0.0,
+            0.0f, 0.0f, 1.0f, 0.0,
+            0.0f, 0.0f ,0.0f, 1.0f;
 
     // 画座标轴
     if(bDrawCoordinateAxis ){
-        mCoordinateAxis.SetColor({0, 1, 1, 1});
-        mCoordinateAxis.Draw(pose, eigen_proj, eigen_vm);
+        mCoordinateAxis.Draw(model, eigen_proj, eigen_vm);
     }
 }
 
@@ -333,8 +343,93 @@ void GL_Content::MainUI()
     ImGui::End();
 }
 
+// // 获取模型表面颜色
+// void GL_Content::GetSurfelColor(Eigen::Vector3f& surfel_color, const inseg_lib::Surfel* surfel)
+// {
+//     switch (mColorType)
+//     {
+//         case COLOR_LABEL:
+//             const cv::Vec3b& color = inseg_lib::CalculateLabelColor(surfel->label);
+//             surfel_color << color(2)/255.0f, color(1)/255.0f, color(0)/255.0f;
+//             break;
+        
+//         case COLOR_PHONG:
+//             surfel_color << 0.9, 0.9, 0.9;
+//             break;
+//         case COLOR_NORMAL:
+//             surfel_color << (surfel->normal.x() + 1.f)/2.f, (surfel->normal.y() + 1.f)/2.f, -surfel->normal.z();
+//             break;
+//         case COLOR_COLOR:
+//             surfel_color << surfel->color[2]/255.0f, surfel->color[1]/255.0f, surfel->color[0]/255.0f;
+//             break;
+//         case COLOR_UPDATED:
+//         {
+//             const cv::Vec3b &color = inseg_lib::CalculateLabelColor(surfel->label);
+//             if (mpGraphSLAM->mLastUpdatedSegments.find(surfel->label) == mpGraphSLAM->mLastUpdatedSegments.end())
+//                 surfel_color << 0.3f * (color(2)/255.0f), 0.3f * (color(1)/255.0f), 0.3f*(color(0) / 255.0f);
+//             else
+//                 surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
+//         }
+//             break;
+//         case COLOR_SEMANTIC:
+//         {
+//             auto label = mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->GetLabel();
+//             if (label != Node::Unknown()) 
+//             {
+//                 if (mpGraphSLAM->GetGraphPred()->GetParams().at("label_type").string_value() == "NYU40" ||
+//                     mpGraphSLAM->GetGraphPred()->GetParams().at("label_type").string_value() == "ScanNet20") {
+//                     auto &name = label;
+//                     auto idx  = NYU40Name2Labels.at(name);
+//                     const auto& color_ = NYU40LabelColors.at(idx);
+//                     surfel_color << color_.r / 255.0f, color_.g / 255.0f, color_.b / 255.0f;
+//                 } else {
+//                     const cv::Vec3b &color = inseg_lib::CalculateLabelColor(mpGraphSLAM->GetGraphPred()->mLabelsName2Idx.at(label));
+//                     surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
+//                 }
+//             } 
+//             else
+//             {
+//                 surfel_color << 0.f, 0.f, 0.f;
+//             }
+
+//             break;
+//         }
+        
+//         case COLOR_INSTANCE: 
+//         {
+//             const cv::Vec3b &color = inseg_lib::CalculateLabelColor(mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->instance_idx);
+//             surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
+//             break;
+//         }
+
+//         case COLOR_PANOPTIC: 
+//         {
+//             const auto &name = mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->GetLabel();
+
+//             if (name != Node::Unknown() && (name == "wall" || name == "floor")) 
+//             {
+//                 auto idx  = NYU40Name2Labels.at(name);
+//                 const auto& color_ = NYU40LabelColors.at(idx);
+//                 surfel_color << color_.r / 255.0f, color_.g / 255.0f, color_.b / 255.0f;
+//             } 
+//             else 
+//             {
+//                 auto inst =  mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->instance_idx.load();
+
+//                 if (inst < (int) mpGraphSLAM->GetGraphPred()->mLabels.size()) {
+//                     const auto & name2 = mpGraphSLAM->GetGraphPred()->mLabels.at(inst);
+//                     if (name2 == "wall" || name2 == "floor") 
+//                     {
+//                         inst+=mpGraphSLAM->GetGraphPred()->mLabels.size();
+//                     }
+//                 }
+//                 const cv::Vec3b &color = inseg_lib::CalculateLabelColor(inst);
+//                 surfel_color << (float)color(2) / 255.0f, (float)color(1) / 255.0f, (float)color(0) / 255.0f;
+//             }
+//             break;
+//         }
 
 
-
-
+//     } // end of the switch
+// } // end of the GL_Content::GetSurfelColor
 

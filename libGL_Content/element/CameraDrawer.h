@@ -3,7 +3,7 @@
 #ifndef GRAPHSLAM_CAMERADRAWER_H
 #define GRAPHSLAM_CAMERADRAWER_H
 
-#include "../../libGL_UI/utils/shader/glShader.hpp"
+#include "../../libGL_ContentBase/utils/shader/glShader.hpp"
 #include <memory>
 
 namespace GLRenderer
@@ -20,8 +20,7 @@ namespace GLRenderer
 
         private:
             unsigned int VAO, VBO, EBO;
-            float mScale = 0.2f;
-            std::unique_ptr<glUtil::Shader> mShader;
+            std::unique_ptr<GLUtils::Shader> mShader;
             bool bInited=false;
             Eigen::Vector4f color {0,1,1,1};
     };

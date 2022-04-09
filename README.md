@@ -1,37 +1,13 @@
 # libGLGUI_GSLAM
-    通过Dear ImGui 和 OpenGL编写的带UI的渲染器
+    20220401版本在20220328版本的代码基础上添加相机渲染和坐标轴渲染。
 
 ## 目录结构
 ```
-libGL_UI
-|---README.md
-|---CMakeLists.txt
-|---main.cpp
-|---cmake
-    |---FindFreeType2.cmake
-    |---Findgl3w.cmake
-    |---FindGLFW.cmake
-    |---FindGLM.cmake
-    |---UseImGUI.cmake
-|---ImGuiExtension // git@github.com:Zedzou/libGLGUI.git
-|---libGL // 创建OpenGL窗口--->关联OpenGL窗口与ImgUI
-    |---CMakeLists.txt
-    |---GL.cpp
-    |---GL.h
-|---libGL_UI // 定义ImgUI并进行显示
-    |---CMakeLists.txt
-    |---GL_UI.cpp
-    |---GL_UI.h
-    |---fonts // 字体
-    |---Shaders // 着色器
-    |---utils
-        |---camera
-        |---mesh
-        |---PointsRenderer
-        |---shader
-        |---stb
-        |---glUtils.hpp
-        |---glUtils.cpp
+libGraphSLAM
+|---GraphSLAM
+|---libGL             // OpenGL渲染窗口
+|---libGL_ContentBase // OpenGL进行内容渲染的基础函数,包含鼠标键盘交互,着色器解析,相机渲染函数,网格渲染函数,模型渲染函数
+|---libGL_Content
 ```
 
 ## Build

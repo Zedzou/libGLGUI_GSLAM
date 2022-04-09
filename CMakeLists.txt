@@ -10,15 +10,10 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 # 子模块
 ADD_SUBDIRECTORY(ImGuiExtension)
 ADD_SUBDIRECTORY(libGL)
-ADD_SUBDIRECTORY(libGL_UI)
+ADD_SUBDIRECTORY(libGL_ContentBase)
+add_subdirectory(libGL_Content)
 
 # .exe
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-ADD_EXECUTABLE(${PROJECT_NAME} main.cpp 
-                               libGL_Content/GL_Content.cpp 
-                               libGL_Content/GL_Content.h 
-                               libGL_Content/element/CameraDrawer.cpp 
-                               libGL_Content/element/CameraDrawer.h
-                               libGL_Content/element/CoordinateAxis.cpp
-                               libGL_Content/element/CoordinateAxis.h)
-target_link_libraries(${PROJECT_NAME} GL_UI)
+ADD_EXECUTABLE(${PROJECT_NAME} main.cpp )
+target_link_libraries(${PROJECT_NAME} PUBLIC GL GL_ContentBase)

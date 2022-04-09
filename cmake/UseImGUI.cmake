@@ -1,7 +1,3 @@
-# Find ImGUI
-# Use ImGUI as an external project
-#
-###
 SET(NAME ImGUI)
 SET(URL "git@github.com:ocornut/imgui.git")
 SET(${NAME}_INSTALL_DIR  ${CMAKE_BINARY_DIR}/external/${NAME})
@@ -12,6 +8,7 @@ IF(NOT EXISTS ${CMAKE_BINARY_DIR}/external/${NAME}/.github)
     ENDIF()
     MESSAGE("cloning ${NAME}..." )
     find_package(Git)
+    #include(FindPythonInterp)
     file(MAKE_DIRECTORY ${${NAME}_INSTALL_DIR})
     execute_process(
             COMMAND ${GIT_EXECUTABLE} clone ${URL} ${NAME}
@@ -19,8 +16,8 @@ IF(NOT EXISTS ${CMAKE_BINARY_DIR}/external/${NAME}/.github)
     )
 ELSE()
     message(${NAME} "is there and do not to git clone ")
-ENDIF()
 
+ENDIF()
 
 if (NOT TARGET ${NAME}-update)
     add_custom_target(${NAME}-update
@@ -30,7 +27,6 @@ if (NOT TARGET ${NAME}-update)
             #DEPENDS ${NAME}
             )
 ENDIF()
-
 
 if (NOT TARGET imgui)
     SET(OpenGL_GL_PREFERENCE GLVND)
@@ -49,11 +45,13 @@ if (NOT TARGET imgui)
             ${ImGUI_INSTALL_DIR}/backends/imgui_impl_glfw.cpp
             ${ImGUI_INSTALL_DIR}/backends/imgui_impl_opengl3.cpp
             )
-
+    #message("gl3w_INCLUDE_DIRS: " ${gl3w_INCLUDE_DIRS})
     target_include_directories(imgui
-                                PUBLIC ${gl3w_INCLUDE_DIRS}
-                                PUBLIC ${ImGUI_INSTALL_DIR}
-                                PUBLIC ${ImGUI_INSTALL_DIR}/backends/)
+            PUBLIC ${gl3w_INCLUDE_DIRS}
+            PUBLIC ${ImGUI_INSTALL_DIR}
+            PUBLIC ${ImGUI_INSTALL_DIR}/backends/
+    #        PUBLIC ${ImGUIFileDialog_INSTALL_DIR}/ImGuiFileDialog/
+            )
 
     target_link_libraries(imgui
             PUBLIC ${OPENGL_LIBRARIES}
@@ -61,7 +59,9 @@ if (NOT TARGET imgui)
             PUBLIC dl
             PUBLIC ${CMAKE_THREAD_LIBS_INIT}
             )
-            
+
+    #set_target_properties(imgui PROPERTIES LINKER_LANGUAGE C LINKER_LANGUAGE CXX)
+    #set_property(TARGET imgui PROPERTY C_STANDARD 11 CXX_STANDARD 11)
     target_compile_definitions(imgui PUBLIC -DIMGUI_IMPL_OPENGL_LOADER_GL3W)
 
     if (WIN32)

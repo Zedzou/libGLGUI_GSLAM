@@ -1,0 +1,2 @@
+/usr/bin/ar qc libGL_Content.a CMakeFiles/GL_Content.dir/GL_Content.cpp.o CMakeFiles/GL_Content.dir/element/CameraDrawer.cpp.o CMakeFiles/GL_Content.dir/element/CoordinateAxis.cpp.o CMakeFiles/GL_Content.dir/element/SurfelDrawer.cpp.o CMakeFiles/GL_Content.dir/element/TrajectoryDrawer.cpp.o
+/usr/bin/ranlib libGL_Content.a
