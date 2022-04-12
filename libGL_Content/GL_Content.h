@@ -1,13 +1,15 @@
 #pragma once
 
 #include "../libGL_ContentBase/GL_ContentBase.h"
+#include "../GraphSLAM/GraphSLAM.h"
 #include "element/CameraDrawer.h"
-#include "eigen_glm.h"
 #include "element/CoordinateAxis.h"
 #include "element/SurfelDrawer.h"
 #include "dataLoader/dataLoader.h"
-#include "element/inseg_lib/include/map.h"
 #include "opencv2/core.hpp"
+#include "label_NYU40.h"
+#include "eigen_glm.h"
+#include "../inseg_lib/include/map.h" // inseg_lib
 
 namespace GLRenderer
 {
@@ -42,7 +44,7 @@ namespace GLRenderer
             void MainUI();
             void process();
             void mainProcess();
-            // void GetSurfelColor(Eigen::Vector3f& surfel_color, const inseg_lib::Surfel* surfel);
+            void GetSurfelColor(Eigen::Vector3f& surfel_color, const inseg_lib::Surfel* surfel);
 
             // 测试相机位姿
             dataLoader* DataLoader;
@@ -53,6 +55,7 @@ namespace GLRenderer
             GLRenderer::CameraDrawer mCameraDrawer;
             GLRenderer::CoordinateAxis mCoordinateAxis;
             GLRenderer::SurfelDrawer mSurfelDrawer;
+            GSLAM::GraphSLAM *mpGraphSLAM; // GraphSLAM
 
             int mProcessMode = PROCESS_STOP;
             bool bDrawCam=true; //是否画相机
@@ -61,6 +64,7 @@ namespace GLRenderer
             bool bNeedUpdate = false;
             bool bRenderSurfel=true;
             int mColorType = COLOR_COLOR;
+            bool bFaceCulling=true;
             
     }; // end of class Renderer
 

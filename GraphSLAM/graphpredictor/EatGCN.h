@@ -7,15 +7,15 @@
 #include "UtilDataProcessing.h"
 #include <onnxruntime_cxx_api.h>
 
-namespace PSLAM 
+namespace GSLAM 
 {
-    class EatGCN : private PSLAM::ONNX::OnnxModelBase 
+    class EatGCN : private GSLAM::ONNX::OnnxModelBase 
     {
         public:
-            using PSLAM::ParamLoader::mModelParams;
-            using PSLAM::ParamLoader::mParams;
-            using PSLAM::ParamLoader::mLabels;
-            using PSLAM::ParamLoader::mRelationships;
+            using GSLAM::ParamLoader::mModelParams;
+            using GSLAM::ParamLoader::mParams;
+            using GSLAM::ParamLoader::mLabels;
+            using GSLAM::ParamLoader::mRelationships;
 
             enum OP_NAME 
             {
@@ -37,7 +37,7 @@ namespace PSLAM
             std::tuple<MemoryBlock2D, MemoryBlock2D> Run( const MemoryBlock3D &input_nodes, const MemoryBlock2D &descriptor, const MemoryBlock2D &edge_index);
 
         protected:
-            using PSLAM::ONNX::OnnxModelBase::Run;
+            using GSLAM::ONNX::OnnxModelBase::Run;
 
         private:
             bool bVerbose=false;

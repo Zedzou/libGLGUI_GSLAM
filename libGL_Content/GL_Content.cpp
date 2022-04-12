@@ -7,13 +7,26 @@ GL_Content::GL_Content(const std::string& WindowName, int width, int height):GLR
 {
     mCameraDrawer.Init();
     mCoordinateAxis.Init();
-    // mSurfelDrawer.Init();
+    mSurfelDrawer.Init( std::bind(&GL_Content::GetSurfelColor, this, std::placeholders::_1, std::placeholders::_2));
     DataLoader = new dataLoader();
+
+    // // 图预测
+    // if (mpGraphSLAM->GetConfig()->graph_predict && mpGraphSLAM->GetGraphPred()) { // 是否进行图预测
+    //     for(const auto& label : mpGraphSLAM->GetGraphPred()->mLabels) {
+    //         if (NYU40Name2Labels.find(label.second) == NYU40Name2Labels.end()) {
+    //             SCLOG(WARNING) << "cannot find label name " << label.second << " in NYU40Name2Labels";
+    //         }
+    //     }
+    // }
+
+    mSurfelDrawer.mDiffuseStrength=0.5;
+    bFaceCulling=false;
+    bShowFPS=true;
 }
 
 GL_Content::~GL_Content()
 {
-    // delete DataLoader;
+    delete DataLoader;
 }
 
 // UI设计(virtual override)
@@ -107,23 +120,23 @@ void GL_Content::MainUI()
 
     ImGui::Checkbox("Process", &bProcess);
 
-//     /// Render options
-//     ImGui::Separator();
-//     bNeedUpdate |= ImGui::Checkbox("Surfel", &bRenderSurfel);
-//     ImGui::SameLine();
-//     bNeedUpdate |= ImGui::Checkbox("Node", &mGraphDrawer.mbDrawNode);
-//     ImGui::SameLine();
-//     bNeedUpdate |= ImGui::Checkbox("Edge", &mGraphDrawer.mbDrawEdge);
-//     bNeedUpdate |= ImGui::Checkbox("Label", &mGraphDrawer.mbDrawLabel);
+    // Render options
+    // ImGui::Separator();
+    // bNeedUpdate |= ImGui::Checkbox("Surfel", &bRenderSurfel);
+    // ImGui::SameLine();
+    // bNeedUpdate |= ImGui::Checkbox("Node", &mGraphDrawer.mbDrawNode);
+    // ImGui::SameLine();
+    // bNeedUpdate |= ImGui::Checkbox("Edge", &mGraphDrawer.mbDrawEdge);
+    // bNeedUpdate |= ImGui::Checkbox("Label", &mGraphDrawer.mbDrawLabel);
 
-//     bNeedUpdate |= ImGui::Checkbox("NodeLabel", &bRenderNodeLabel);
-//     ImGui::SameLine();
-//     bNeedUpdate |= ImGui::Checkbox("EdgeLabel", &bRenderEdgeLabel);
+    // bNeedUpdate |= ImGui::Checkbox("NodeLabel", &bRenderNodeLabel);
+    // ImGui::SameLine();
+    // bNeedUpdate |= ImGui::Checkbox("EdgeLabel", &bRenderEdgeLabel);
 
-//     ImGui::Checkbox("face culling",&bFaceCulling);
-//     ImGui::Checkbox("Draw grid", &bShowGrid);
-//     ImGui::Checkbox("Draw Traj.", &bDrawTraj);
-//     ImGui::Checkbox("Draw Cam", &bDrawCam);
+    // ImGui::Checkbox("face culling",&bFaceCulling);
+    // ImGui::Checkbox("Draw grid", &bShowGrid);
+    // ImGui::Checkbox("Draw Traj.", &bDrawTraj);
+    // ImGui::Checkbox("Draw Cam", &bDrawCam);
 
 //     ImGui::Checkbox("FPS", &bShowFPS);
 //     ImGui::Checkbox("Use thread", &mpGraphSLAM->UseThread());
@@ -343,93 +356,98 @@ void GL_Content::MainUI()
     ImGui::End();
 }
 
-// // 获取模型表面颜色
-// void GL_Content::GetSurfelColor(Eigen::Vector3f& surfel_color, const inseg_lib::Surfel* surfel)
-// {
-//     switch (mColorType)
-//     {
-//         case COLOR_LABEL:
-//             const cv::Vec3b& color = inseg_lib::CalculateLabelColor(surfel->label);
-//             surfel_color << color(2)/255.0f, color(1)/255.0f, color(0)/255.0f;
-//             break;
+// 获取模型表面颜色
+void GL_Content::GetSurfelColor(Eigen::Vector3f& surfel_color, const inseg_lib::Surfel* surfel)
+{
+    switch (mColorType)
+    {
+        case COLOR_LABEL:
+        {
+            const cv::Vec3b& color = inseg_lib::CalculateLabelColor(surfel->label);
+            surfel_color << color(2)/255.0f, color(1)/255.0f, color(0)/255.0f;
+            break;
+        }
+        case COLOR_PHONG:
+        {
+            surfel_color << 0.9, 0.9, 0.9;
+            break;
+        }
+        case COLOR_NORMAL:
+        {
+            surfel_color << (surfel->normal.x() + 1.f)/2.f, (surfel->normal.y() + 1.f)/2.f, -surfel->normal.z();
+            break;
+        }
+        case COLOR_COLOR:
+            surfel_color << surfel->color[2]/255.0f, surfel->color[1]/255.0f, surfel->color[0]/255.0f;
+            break;
+        case COLOR_UPDATED:
+        {
+            const cv::Vec3b &color = inseg_lib::CalculateLabelColor(surfel->label);
+            if (mpGraphSLAM->mLastUpdatedSegments.find(surfel->label) == mpGraphSLAM->mLastUpdatedSegments.end())
+                surfel_color << 0.3f * (color(2)/255.0f), 0.3f * (color(1)/255.0f), 0.3f*(color(0) / 255.0f);
+            else
+                surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
+        }
+            break;
+        case COLOR_SEMANTIC:
+        {
+            auto label = mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->GetLabel();
+            if (label != GSLAM::Node::Unknown()) 
+            {
+                if (mpGraphSLAM->GetGraphPred()->GetParams().at("label_type").string_value() == "NYU40" ||
+                    mpGraphSLAM->GetGraphPred()->GetParams().at("label_type").string_value() == "ScanNet20") {
+                    auto &name = label;
+                    auto idx  = NYU40Name2Labels.at(name);
+                    const auto& color_ = NYU40LabelColors.at(idx);
+                    surfel_color << color_.r / 255.0f, color_.g / 255.0f, color_.b / 255.0f;
+                } else {
+                    const cv::Vec3b &color = inseg_lib::CalculateLabelColor(mpGraphSLAM->GetGraphPred()->mLabelsName2Idx.at(label));
+                    surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
+                }
+            } 
+            else
+            {
+                surfel_color << 0.f, 0.f, 0.f;
+            }
+
+            break;
+        }
         
-//         case COLOR_PHONG:
-//             surfel_color << 0.9, 0.9, 0.9;
-//             break;
-//         case COLOR_NORMAL:
-//             surfel_color << (surfel->normal.x() + 1.f)/2.f, (surfel->normal.y() + 1.f)/2.f, -surfel->normal.z();
-//             break;
-//         case COLOR_COLOR:
-//             surfel_color << surfel->color[2]/255.0f, surfel->color[1]/255.0f, surfel->color[0]/255.0f;
-//             break;
-//         case COLOR_UPDATED:
-//         {
-//             const cv::Vec3b &color = inseg_lib::CalculateLabelColor(surfel->label);
-//             if (mpGraphSLAM->mLastUpdatedSegments.find(surfel->label) == mpGraphSLAM->mLastUpdatedSegments.end())
-//                 surfel_color << 0.3f * (color(2)/255.0f), 0.3f * (color(1)/255.0f), 0.3f*(color(0) / 255.0f);
-//             else
-//                 surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
-//         }
-//             break;
-//         case COLOR_SEMANTIC:
-//         {
-//             auto label = mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->GetLabel();
-//             if (label != Node::Unknown()) 
-//             {
-//                 if (mpGraphSLAM->GetGraphPred()->GetParams().at("label_type").string_value() == "NYU40" ||
-//                     mpGraphSLAM->GetGraphPred()->GetParams().at("label_type").string_value() == "ScanNet20") {
-//                     auto &name = label;
-//                     auto idx  = NYU40Name2Labels.at(name);
-//                     const auto& color_ = NYU40LabelColors.at(idx);
-//                     surfel_color << color_.r / 255.0f, color_.g / 255.0f, color_.b / 255.0f;
-//                 } else {
-//                     const cv::Vec3b &color = inseg_lib::CalculateLabelColor(mpGraphSLAM->GetGraphPred()->mLabelsName2Idx.at(label));
-//                     surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
-//                 }
-//             } 
-//             else
-//             {
-//                 surfel_color << 0.f, 0.f, 0.f;
-//             }
+        case COLOR_INSTANCE: 
+        {
+            const cv::Vec3b &color = inseg_lib::CalculateLabelColor(mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->instance_idx);
+            surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
+            break;
+        }
 
-//             break;
-//         }
-        
-//         case COLOR_INSTANCE: 
-//         {
-//             const cv::Vec3b &color = inseg_lib::CalculateLabelColor(mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->instance_idx);
-//             surfel_color << color(2) / 255.0f, color(1) / 255.0f, color(0) / 255.0f;
-//             break;
-//         }
+        case COLOR_PANOPTIC: 
+        {
+            const auto &name = mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->GetLabel();
 
-//         case COLOR_PANOPTIC: 
-//         {
-//             const auto &name = mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->GetLabel();
+            if (name !=GSLAM::Node::Unknown() && (name == "wall" || name == "floor")) 
+            {
+                auto idx  = NYU40Name2Labels.at(name);
+                const auto& color_ = NYU40LabelColors.at(idx);
+                surfel_color << color_.r / 255.0f, color_.g / 255.0f, color_.b / 255.0f;
+            } 
+            else 
+            {
+                auto inst =  mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->instance_idx.load();
 
-//             if (name != Node::Unknown() && (name == "wall" || name == "floor")) 
-//             {
-//                 auto idx  = NYU40Name2Labels.at(name);
-//                 const auto& color_ = NYU40LabelColors.at(idx);
-//                 surfel_color << color_.r / 255.0f, color_.g / 255.0f, color_.b / 255.0f;
-//             } 
-//             else 
-//             {
-//                 auto inst =  mpGraphSLAM->GetGraph()->nodes.at(surfel->label)->instance_idx.load();
-
-//                 if (inst < (int) mpGraphSLAM->GetGraphPred()->mLabels.size()) {
-//                     const auto & name2 = mpGraphSLAM->GetGraphPred()->mLabels.at(inst);
-//                     if (name2 == "wall" || name2 == "floor") 
-//                     {
-//                         inst+=mpGraphSLAM->GetGraphPred()->mLabels.size();
-//                     }
-//                 }
-//                 const cv::Vec3b &color = inseg_lib::CalculateLabelColor(inst);
-//                 surfel_color << (float)color(2) / 255.0f, (float)color(1) / 255.0f, (float)color(0) / 255.0f;
-//             }
-//             break;
-//         }
+                if (inst < (int) mpGraphSLAM->GetGraphPred()->mLabels.size()) {
+                    const auto & name2 = mpGraphSLAM->GetGraphPred()->mLabels.at(inst);
+                    if (name2 == "wall" || name2 == "floor") 
+                    {
+                        inst+=mpGraphSLAM->GetGraphPred()->mLabels.size();
+                    }
+                }
+                const cv::Vec3b &color = inseg_lib::CalculateLabelColor(inst);
+                surfel_color << (float)color(2) / 255.0f, (float)color(1) / 255.0f, (float)color(0) / 255.0f;
+            }
+            break;
+        }
 
 
-//     } // end of the switch
-// } // end of the GL_Content::GetSurfelColor
+    } // end of the switch
+} // end of the GL_Content::GetSurfelColor
 

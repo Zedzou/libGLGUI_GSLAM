@@ -1,6 +1,3 @@
-//
-// Created by sc on 10/9/20.
-//
 #include <vector>
 #include <string>
 #include <fstream>
@@ -11,8 +8,10 @@
 
 #ifndef GRAPHSLAM_UTILINSEGPLYLOADER_H
 #define GRAPHSLAM_UTILINSEGPLYLOADER_H
-namespace Util {
-    void print_headers(const tinyply::PlyFile &file){
+namespace Util 
+{
+    void print_headers(const tinyply::PlyFile &file)
+    {
         for (const auto &e : file.get_elements()) {
             std::cout << "\t[ply_header] element: " << e.name << " (" << e.size << ")" << std::endl;
             for (const auto &p : e.properties) {

@@ -1,13 +1,10 @@
-//
-// Created by sc on 10/9/20.
-//
-
 #ifndef GRAPHSLAM_UTILMATH_H
 #define GRAPHSLAM_UTILMATH_H
-#include <ORUtils/Vector.h>
+#include <Tools/Vector.h>
 #include "MemoryBlock.h"
 
-namespace Math {
+namespace Math 
+{
     static ORUtils::Vector3<float> sum(const ORUtils::Vector3<float> *data, size_t size) {
         ORUtils::Vector3<float> sum(0.f);
         for (size_t i = 0; i < size; ++i)

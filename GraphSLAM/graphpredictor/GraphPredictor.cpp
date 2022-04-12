@@ -1,11 +1,11 @@
 #include "GraphPredictor.h"
 #include "MemoryBlock.h"
 #include "OnnxModelBase.h"
-#include <ORUtils/LogUtil.h>
-using namespace PSLAM;
+#include <Tools/LogUtil.h>
+using namespace GSLAM;
 
 // 构造函数
-GraphPredictor::GraphPredictor(const ConfigPSLAM *configPslam) : mConfigPslam(configPslam), mUpdated(false)
+GraphPredictor::GraphPredictor(const ConfigGSLAM *configPslam) : mConfigPslam(configPslam), mUpdated(false)
 {
     source_to_target = false;
     auto path_onnx = configPslam->pth_model + "/";
@@ -77,7 +77,7 @@ void GraphPredictor::RUN(Graph *graph)
         }
         else 
         {
-            mThread = std::async(std::launch::async, std::bind(&PSLAM::GraphPredictor::Process_IMPL, this));
+            mThread = std::async(std::launch::async, std::bind(&GSLAM::GraphPredictor::Process_IMPL, this));
         }
     }
     else
@@ -244,7 +244,8 @@ void calculateBBox(const std::vector<float> &points, float *min, float *max){
     }
 }
 
-std::shared_ptr<PSLAM::GraphPredictor::Prediction> GraphPredictor::Predict(const std::shared_ptr<GCNINPUTDATA>& data) 
+// 预测
+std::shared_ptr<GSLAM::GraphPredictor::Prediction> GraphPredictor::Predict(const std::shared_ptr<GCNINPUTDATA>& data) 
 {
     {
         std::tuple<MemoryBlock2D, MemoryBlock2D> result;
@@ -408,7 +409,7 @@ void GraphPredictor::UpdateNodeFeature(const std::map<int, NodePtr> &vNodes)
     SCLOG(VERBOSE) << "compute";
     std::vector<float *> obj_inputs = {reinterpret_cast<float *>(input_nodes.data())};
     std::vector<std::vector<int64_t>> obj_input_sizes = {{static_cast<long>(n_nodes), static_cast<long>(d_pts), static_cast<long>(n_pts)}};
-    auto out_enc_obj = mEatGCN->Compute(PSLAM::EatGCN::OP_ENC_OBJ, obj_inputs, obj_input_sizes);
+    auto out_enc_obj = mEatGCN->Compute(GSLAM::EatGCN::OP_ENC_OBJ, obj_inputs, obj_input_sizes);
     size_t dim_obj_feature = out_enc_obj[0].GetTensorTypeAndShapeInfo().GetShape()[1];
     auto out = ConcatObjFeature(n_nodes, dim_obj_feature, out_enc_obj[0], descriptor_full);
     CTOCK("[UpdateNodeFeature]3.compute");
@@ -544,7 +545,7 @@ void GraphPredictor::UpdateEdgeFeature(const std::map<int,NodePtr> &vNodes)
     auto edge_descriptor = DataUtil::compute_edge_descriptor(descriptor_full, edge_index, source_to_target);
     std::vector<float *> rel_inputs = {static_cast<float *>(edge_descriptor.data())};
     std::vector<std::vector<int64_t>> rel_input_sizes = {{static_cast<long>(n_edges), static_cast<long>(d_edge), 1}};
-    auto out_enc_rel = mEatGCN->Compute(PSLAM::EatGCN::OP_ENC_REL, rel_inputs, rel_input_sizes);
+    auto out_enc_rel = mEatGCN->Compute(GSLAM::EatGCN::OP_ENC_REL, rel_inputs, rel_input_sizes);
     CTOCK("[UpdateEdgeFeature]4.computeEdgeFeature");
 
     //TODO: remove me
@@ -569,7 +570,7 @@ void GraphPredictor::UpdateEdgeFeature(const std::map<int,NodePtr> &vNodes)
         {
             std::unique_lock<std::mutex> lock(mpGraph->mMutEdge);
             if (edges.find({idx_from,idx_to}) == edges.end()) {
-                edge = std::make_shared<PSLAM::Edge>();
+                edge = std::make_shared<GSLAM::Edge>();
                 edge->nodeFrom=idx_from;
                 edge->nodeTo=idx_to;
             } else {
@@ -749,7 +750,7 @@ void GraphPredictor::UpdateGCNFeature(const std::map<int,NodePtr> &vNodes, size_
         inputs.emplace_back(ONNX::CreateTensor(mMemoryInfo.get(), obj_f_j.data(),
                 {static_cast<long>(n_edges), dim_obj_f}));
 
-        auto output_atten = mEatGCN->ComputeGCN(PSLAM::EatGCN::OP_GCN_ATTEN, level, inputs);
+        auto output_atten = mEatGCN->ComputeGCN(GSLAM::EatGCN::OP_GCN_ATTEN, level, inputs);
         if (mDebug) {
             ONNX::PrintVector("output_atten", output_atten[0].GetTensorMutableData<float>(),
                         std::vector<int64_t>{output_atten[0].GetTensorTypeAndShapeInfo().GetShape()[0],
@@ -771,7 +772,7 @@ void GraphPredictor::UpdateGCNFeature(const std::map<int,NodePtr> &vNodes, size_
 
         std::vector<float *> gcn_nn_inputs = {xxx.data()};
         std::vector<std::vector<int64_t>> gcn_nn_input_size = {{static_cast<long>(n_nodes), dim_obj_f + dim_hidden}};
-        auto gcn_nn2_outputs = mEatGCN->ComputeGCN(PSLAM::EatGCN::OP_GCN_PROP, level, gcn_nn_inputs, gcn_nn_input_size);
+        auto gcn_nn2_outputs = mEatGCN->ComputeGCN(GSLAM::EatGCN::OP_GCN_PROP, level, gcn_nn_inputs, gcn_nn_input_size);
         if (level + 1 < size_t(GetParams().at("n_layers").int_value())) {
             DataUtil::Relu(gcn_nn2_outputs[0].GetTensorMutableData<float>(), n_nodes * dim_obj_f);
             DataUtil::Relu(output_atten[1].GetTensorMutableData<float>(), n_edges * dim_rel_f);
@@ -887,7 +888,7 @@ void GraphPredictor::UpdatePrediction(const std::map<int,NodePtr> &vNodes, const
             node_features.push_back(ONNX::CreateTensor(mMemoryInfo.get(), nodeFeatures.Get<float>(),
                                                        {static_cast<long>(n_nodes),
                                                         static_cast<long>(dim_obj_f)}));
-            auto objcls_prob = mEatGCN->Compute(PSLAM::EatGCN::OP_CLS_OBJ, node_features);
+            auto objcls_prob = mEatGCN->Compute(GSLAM::EatGCN::OP_CLS_OBJ, node_features);
             size_t num_cls = objcls_prob[0].GetTensorTypeAndShapeInfo().GetShape()[1];
             assert(mLabels.size() == num_cls);
             SCLOG(VERBOSE) << "write back.";
@@ -961,7 +962,7 @@ void GraphPredictor::UpdatePrediction(const std::map<int,NodePtr> &vNodes, const
         edge_features.push_back(ONNX::CreateTensor(mMemoryInfo.get(), edgeFeatures.Get<float>(),
                                                    {static_cast<long>(selected_edges.size()),
                                                     static_cast<long>(dim_rel_f)}));
-        auto relcls_prob = mEatGCN->Compute(PSLAM::EatGCN::OP_CLS_REL, edge_features);
+        auto relcls_prob = mEatGCN->Compute(GSLAM::EatGCN::OP_CLS_REL, edge_features);
 
         size_t num_rel = relcls_prob[0].GetTensorTypeAndShapeInfo().GetShape()[1];
         assert(num_rel == mRelationships.size());

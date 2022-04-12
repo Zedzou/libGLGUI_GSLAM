@@ -2,10 +2,14 @@
 #define GRAPHSLAM_H
 
 #include "graphpredictor/GraphPredictor.h"
-#include "include/config.h"
-#include "include/graph.h"
-#include "./inseg_lib/include/lib.h"
-#include "./inseg_lib/include/disjoint_set.h"
+#include "../inseg_lib/include/lib.h"
+#include <Tools/Logging.h>
+#include <Tools/LogUtil.h>
+#include "CameraParameters.h"
+#include "config.h"
+#include "graph.h"
+#include <memory>
+#include "tinyply.h"
 
 #include <future>
 #include <Eigen/Core>
@@ -16,10 +20,11 @@ namespace GSLAM
     class GraphSLAM
     {
         public:
-            explicit GraphSLAM(ConfigPSLAM* config, const CameraParameters& camParamD);
+            explicit GraphSLAM(ConfigGSLAM* config, const CameraParameters& camParamD);
             ~GraphSLAM();
 
             // Frameprocessing
+            bool LoadPredictModel();
             bool Initialize(const CameraParameters &camParamD);
             void ProcessFrame(int idx, const cv::Mat &colorImage, const cv::Mat &depthImage, const Eigen::Matrix4f *pose);
             bool &UseThread(){return mConfig->use_thread;}
@@ -27,25 +32,10 @@ namespace GSLAM
             // Access
             inseg_lib::InSegLib *GetInSeg() { return inseg_.get(); }
             Graph *GetGraph() { return mGraph.get(); }
-            ConfigPSLAM *GetConfig(){return mConfig;}
+            ConfigGSLAM *GetConfig(){return mConfig;}
 
             GraphPredictor *GetGraphPred() { return mpGraphPredictor.get(); }
             json11::Json GetSceneGraph(bool full);
-
-            // IO
-            void SaveModel(const std::string &output_folder) const;
-            void SaveGraph(const std::string &output_folder, bool fullProb);
-            void SaveSurfelsToPLY(int segment_filter, const std::string &output_folder, const std::string *output_name, bool binary);
-            void SaveNodesToPLY(int segment_filter, const std::string &output_folder, SAVECOLORMODE saveColorMode, bool binary=false);
-            void SaveSurfelsToPLY(const std::string &output_folder, const std::string &output_name, const std::vector<std::shared_ptr<inseg_lib::Surfel>> &surfels, bool binary);
-            void RunFullPrediction(); // Graph
-            void Start(); // Start backend
-            void Stop(); // Stop backend
-            void AddSelectedNodeToUpdate(int idx);
-            bool LoadPredictModel();
-
-            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-            std::set<int> mLastUpdatedSegments{};
 
             enum SAVECOLORMODE 
             { 
@@ -56,10 +46,33 @@ namespace GSLAM
                 SAVECOLORMODEL_PANOPTIC
             };
 
+            // IO
+            void SaveModel(const std::string &output_folder) const;
+            void SaveGraph(const std::string &output_folder, bool fullProb);
+            void SaveSurfelsToPLY(int segment_filter, 
+                                  const std::string &output_folder, 
+                                  const std::string &output_name, 
+                                  bool binary);
+            void SaveNodesToPLY(int segment_filter, 
+                                const std::string &output_folder, 
+                                SAVECOLORMODE saveColorMode, 
+                                bool binary=false);
+            void SaveSurfelsToPLY(const std::string &output_folder, 
+                                  const std::string &output_name, 
+                                  const std::vector<std::shared_ptr<inseg_lib::Surfel>> &surfels, 
+                                  bool binary);
+            void RunFullPrediction(); // Graph
+            void Start();             // Start backend
+            void Stop();              // Stop backend
+            void AddSelectedNodeToUpdate(int idx);
+            
+            // EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+            std::set<int> mLastUpdatedSegments{};
+
         private:
 
             // Graph
-            ConfigPSLAM *mConfig;
+            ConfigGSLAM *mConfig;
             std::shared_ptr<Graph> mGraph;
         
             // Inseg Standard configuration. 实例分割设置
@@ -75,7 +88,6 @@ namespace GSLAM
 
             // 图预测指针
             GraphPredictorPtr mpGraphPredictor; // Graph预测器
-
             std::vector< std::shared_ptr<inseg_lib::Surfel> > GetUpdatedSurfels();
             std::vector< std::shared_ptr<inseg_lib::Surfel> > FilterSegment( int segment_filter, const std::vector<std::shared_ptr<inseg_lib::Surfel>> &surfels);
     };

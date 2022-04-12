@@ -2,7 +2,7 @@ set(NAME OpenCV)
 set(URL "git@github.com:opencv/opencv.git")
 set(${NAME}_INSTALL_DIR ${CMAKE_BINARY_DIR}/external/${NAME})
 
-if(NOT OpenCV_FOUND)
+if(NOT EXISTS ${${NAME}_INSTALL_DIR})
 
     find_package(Git)
     if(NOT EXISTS ${CMAKE_BINARY_DIR}/external)
@@ -33,7 +33,7 @@ if(NOT OpenCV_FOUND)
 
     # make
     execute_process(
-        COMMAND make
+        COMMAND make -j8
         WORKING_DIRECTORY ${${NAME}_INSTALL_DIR}/build
     )
 
@@ -43,8 +43,9 @@ if(NOT OpenCV_FOUND)
         WORKING_DIRECTORY ${${NAME}_INSTALL_DIR}/build
     )
 
-    set(OpenCV_FOUND 1 CACHE STRING "set 1 to ")
 endif()
 
+file(GLOB OpenCV_LIBRARY_NAMES "${${NAME}_INSTALL_DIR}/bin/lib/*.so")
+
 set(OpenCV_INCLUDE_DIR ${${NAME}_INSTALL_DIR}/bin/include/opencv4)
-set(OpenCV_LIBRARY_DIR ${${NAME}_INSTALL_DIR}/bin/lib)
+set(OpenCV_LIBRARY_DIR ${OpenCV_LIBRARY_NAMES})

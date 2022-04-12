@@ -1,5 +1,5 @@
 #include "SurfelDrawer.h"
-#include "./inseg_lib/include/map.h"
+#include "../../inseg_lib/include/map.h"
 
 using namespace GLRenderer;
 

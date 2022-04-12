@@ -5,8 +5,8 @@
 #include <memory>
 #include <set>
 #include "../../libGL_ContentBase/utils/shader/glShader.hpp"
-#include "./inseg_lib/include/surfel.h"
 #include "./ModelRenderer/define.h"
+#include "../../inseg_lib/include/surfel.h" // inseg_lib
 
 namespace GLRenderer
 {

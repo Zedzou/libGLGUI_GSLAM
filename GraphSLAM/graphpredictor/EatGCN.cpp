@@ -1,11 +1,8 @@
-//
-// Created by sc on 12/18/20.
-//
 #include "EatGCN.h"
 #include <cassert>
-using namespace PSLAM;
+using namespace GSLAM;
 
-EatGCN::EatGCN(std::string path, Ort::MemoryInfo *memoryInfo, bool verbose) : PSLAM::ONNX::OnnxModelBase(std::move(path), memoryInfo),bVerbose(verbose) 
+EatGCN::EatGCN(std::string path, Ort::MemoryInfo *memoryInfo, bool verbose) : GSLAM::ONNX::OnnxModelBase(std::move(path), memoryInfo),bVerbose(verbose) 
 {
             mOp2Name[OP_ENC_OBJ] = "obj_pnetenc";
             mOp2Name[OP_ENC_REL] = "rel_pnetenc";
@@ -88,7 +85,7 @@ std::tuple<MemoryBlock2D, MemoryBlock2D> EatGCN::Run(
 
     std::vector<float *> rel_inputs = {static_cast<float *>(edge_descriptor.data())};
     std::vector<std::vector<int64_t>> rel_input_sizes = {{n_edge, d_edge, 1}};
-    auto out_enc_rel = Compute(PSLAM::EatGCN::OP_ENC_REL, rel_inputs, rel_input_sizes);
+    auto out_enc_rel = Compute(GSLAM::EatGCN::OP_ENC_REL, rel_inputs, rel_input_sizes);
     if (bVerbose) {
         PrintTensorShape(out_enc_rel[0], "enc_rel");
         std::cerr << "\n";
@@ -99,7 +96,7 @@ std::tuple<MemoryBlock2D, MemoryBlock2D> EatGCN::Run(
 //            {
     std::vector<float *> obj_inputs = {reinterpret_cast<float *>(input_nodes.data())};
     std::vector<std::vector<int64_t>> obj_input_sizes = {{n_node, d_pts, n_pts}};
-    auto out_enc_obj = Compute(PSLAM::EatGCN::OP_ENC_OBJ, obj_inputs, obj_input_sizes);
+    auto out_enc_obj = Compute(GSLAM::EatGCN::OP_ENC_OBJ, obj_inputs, obj_input_sizes);
     size_t dim_obj_feature = out_enc_obj[0].GetTensorTypeAndShapeInfo().GetShape()[1];
 
     if (bVerbose) {
@@ -138,7 +135,7 @@ std::tuple<MemoryBlock2D, MemoryBlock2D> EatGCN::Run(
             inputs.emplace_back(CreateTensor(obj_f_i.data(), {n_edge, dim_obj_f}));
             inputs.emplace_back(std::move(rel_f));
             inputs.emplace_back(CreateTensor(obj_f_j.data(), {n_edge, dim_obj_f}));
-            auto output_atten = ComputeGCN(PSLAM::EatGCN::OP_GCN_ATTEN, l, inputs);
+            auto output_atten = ComputeGCN(GSLAM::EatGCN::OP_GCN_ATTEN, l, inputs);
             if (bVerbose) {
                 PrintVector("output_atten", output_atten[0].GetTensorMutableData<float>(),
                             std::vector<int64_t>{output_atten[0].GetTensorTypeAndShapeInfo().GetShape()[0],
@@ -162,7 +159,7 @@ std::tuple<MemoryBlock2D, MemoryBlock2D> EatGCN::Run(
 
             std::vector<float *> gcn_nn_inputs = {xxx.data()};
             std::vector<std::vector<int64_t>> gcn_nn_input_size = {{n_node, dim_obj_f + dim_hidden}};
-            auto gcn_nn2_outputs = ComputeGCN(PSLAM::EatGCN::OP_GCN_PROP, l, gcn_nn_inputs, gcn_nn_input_size);
+            auto gcn_nn2_outputs = ComputeGCN(GSLAM::EatGCN::OP_GCN_PROP, l, gcn_nn_inputs, gcn_nn_input_size);
             if (bVerbose)
                 PrintVector("gcn_nn2_outputs", gcn_nn2_outputs[0].GetTensorMutableData<float>(),
                             std::vector<int64_t>{gcn_nn2_outputs[0].GetTensorTypeAndShapeInfo().GetShape()[0],
@@ -180,8 +177,8 @@ std::tuple<MemoryBlock2D, MemoryBlock2D> EatGCN::Run(
     std::vector<Ort::Value> edge_features;
     node_features.push_back(std::move(obj_f));
     edge_features.push_back(std::move(rel_f));
-    auto objcls_prob = Compute(PSLAM::EatGCN::OP_CLS_OBJ, node_features);
-    auto relcls_prob = Compute(PSLAM::EatGCN::OP_CLS_REL, edge_features);
+    auto objcls_prob = Compute(GSLAM::EatGCN::OP_CLS_OBJ, node_features);
+    auto relcls_prob = Compute(GSLAM::EatGCN::OP_CLS_REL, edge_features);
     if (bVerbose) {
         PrintVector("objcls_prob", objcls_prob[0].GetTensorMutableData<float>(),
                     std::vector<int64_t>{objcls_prob[0].GetTensorTypeAndShapeInfo().GetShape()[0],

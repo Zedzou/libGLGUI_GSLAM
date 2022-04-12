@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include <inseg_lib/lib.h>
+#include "../../inseg_lib/include/lib.h"
 #include <random>
 #include "../node.h"
 #include "../edge.h"
@@ -10,14 +10,14 @@
 #include "EatGCN.h"
 #include <future>
 
-namespace PSLAM 
+namespace GSLAM 
 {
     typedef std::tuple<MemoryBlock3D, MemoryBlock2D, MemoryBlock2D, std::map<size_t, size_t>, std::map<int, std::pair<size_t,size_t>> > GCNINPUTDATA;
     class GraphPredictor 
     {
         public:
             typedef std::tuple< std::map<size_t,std::map<std::string,float>>, std::vector<EdgePtr>,std::map<int, std::pair<size_t,size_t>> > Prediction;
-            explicit GraphPredictor( const ConfigPSLAM *configPslam);
+            explicit GraphPredictor( const ConfigGSLAM *configPslam);
             ~GraphPredictor();
             void RUN(Graph *graph);
             void Stop();
@@ -34,7 +34,7 @@ namespace PSLAM
             std::map<std::string, size_t> mLabelsName2Idx,mRelationshipsName2Idx;
 
         private:
-            const ConfigPSLAM *mConfigPslam;
+            const ConfigGSLAM *mConfigPslam;
             std::unique_ptr<Ort::MemoryInfo> mMemoryInfo;
             std::unique_ptr<EatGCN> mEatGCN;
             Graph *mpGraph = nullptr;
@@ -57,5 +57,5 @@ namespace PSLAM
             std::map<std::string,std::vector<std::pair<int,float>>> mTimes;
     };
     typedef std::shared_ptr<GraphPredictor> GraphPredictorPtr;
-    static inline GraphPredictorPtr MakeGraphPredictor(const ConfigPSLAM *configPslam) {return std::make_shared<GraphPredictor>(configPslam);}
+    static inline GraphPredictorPtr MakeGraphPredictor(const ConfigGSLAM *configPslam) {return std::make_shared<GraphPredictor>(configPslam);}
 }

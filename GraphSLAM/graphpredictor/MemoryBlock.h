@@ -1,7 +1,7 @@
 #ifndef GRAPHSLAM_MEMORYBLOCK_H
 #define GRAPHSLAM_MEMORYBLOCK_H
-#include <ORUtils/Vector.h>
-#include <ORUtils/Logging.h>
+#include <Tools/Vector.h>
+#include <Tools/Logging.h>
 #include <cassert>
 #include <cstring>
 

@@ -1,7 +1,3 @@
-//
-// Created by sc on 10/6/20.
-//
-
 #ifndef GRAPHSLAM_UTILDATAPROCESSING_H
 #define GRAPHSLAM_UTILDATAPROCESSING_H
 
@@ -14,7 +10,7 @@
 #include <set>
 #include <random>
 #include <iostream>
-namespace PSLAM {
+namespace GSLAM {
     class DataUtil {
     public:
         static ORUtils::VectorX<float,6> compute_bbox(const MemoryBlock2D &points){

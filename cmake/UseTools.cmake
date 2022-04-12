@@ -1,0 +1,5 @@
+if(EXISTS ${CMAKE_SOURCE_DIR}/Tools)
+    include_directories(${CMAKE_SOURCE_DIR}/Tools/include)
+else()
+    message(" this is not directory in ${CMAKE_BINARY_DIR}")
+endif()

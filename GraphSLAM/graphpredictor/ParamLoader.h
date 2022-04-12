@@ -1,15 +1,13 @@
-//
-// Created by sc on 10/6/20.
-//
-
 #ifndef GRAPHSLAM_PARAMLOADER_H
 #define GRAPHSLAM_PARAMLOADER_H
 #include <string>
 #include <json11.hpp>
 #include <cstring>
-#include <ORUtils/JsonUtil.h>
-namespace PSLAM {
-    struct ONNX_MODEL_PARAMS {
+#include <Tools/JsonUtil.h>
+namespace GSLAM 
+{
+    struct ONNX_MODEL_PARAMS 
+    {
         std::string model_path;
         std::vector<std::string> inputName_;// this is to store the memory location. the onnx needs const char* format. a direct store of const char * in a vector is problematic.
         std::vector<std::string> outputName_;

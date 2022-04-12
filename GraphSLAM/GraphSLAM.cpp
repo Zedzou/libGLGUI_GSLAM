@@ -1,22 +1,19 @@
 #include "GraphSLAM.h"
-#include <memory>
-
 using namespace GSLAM;
 
 // 构造函数
-GraphSLAM::GraphSLAM(ConfigPSLAM* config, const CameraParameters& camParamD):mCOnfig(config)
+GraphSLAM::GraphSLAM(ConfigGSLAM* config, const CameraParameters& camParamD) : mConfig(config)
 {
     mGraph = std::make_shared<Graph>( config, config->use_thread );
     inseg_ = std::make_shared<inseg_lib::InSegLib>( mGraph, 
                                                     config->inseg_config, 
                                                     config->main_config, 
                                                     config->map_config, 
-                                                    config->segmentation_config )
+                                                    config->segmentation_config );
     pose_.setIdentity();
 
     // 图预测
-    if(mConfig->graph_predict)
-    {
+    if(mConfig->graph_predict){
         if( LoadPredictModel() ){
             mpGraphPredictor->RUN(mGraph.get());
         }
@@ -25,28 +22,25 @@ GraphSLAM::GraphSLAM(ConfigPSLAM* config, const CameraParameters& camParamD):mCO
         }
     }
     Initialize(camParamD);
-}
+};
 
 // 析构函数
 GraphSLAM::~GraphSLAM()
 {
     if(mpGraphPredictor)mpGraphPredictor->Stop();
-}
+};
 
 // 导入预测模型
-bool GraphSALM::LoadPredictModel()
+bool GraphSLAM::LoadPredictModel()
 {
-    try 
-    {
+    try {
         mpGraphPredictor = MakeGraphPredictor(mConfig);
         return true;
     } 
-    catch (...) 
-    {
+    catch (...) {
         SCLOG(WARNING) << "Loading model from " << mConfig->pth_model << " failed.";
         return false;
     }
-
 }
 
 // inSeg_初始化相机参数

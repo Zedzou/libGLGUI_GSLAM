@@ -1,13 +1,12 @@
-//
-// Created by sc on 10/9/20.
-//
-
 #ifndef GRAPHSLAM_ONNXMODELBASE_H
 #define GRAPHSLAM_ONNXMODELBASE_H
 #include "ParamLoader.h"
 #include <onnxruntime_cxx_api.h>
-namespace PSLAM {
-    namespace ONNX {
+
+namespace GSLAM 
+{
+    namespace ONNX 
+    {
         template<typename T>
         static size_t GetTotalSizeFromVector(const std::vector<T> &vec){
             size_t size = 1;
@@ -17,11 +16,13 @@ namespace PSLAM {
         }
 
         template<typename T>
-        static inline Ort::Value CreateTensor(const Ort::MemoryInfo *memoryInfo, T* data, const std::vector<int64_t> &dims ) {
+        static inline Ort::Value CreateTensor(const Ort::MemoryInfo *memoryInfo, T* data, const std::vector<int64_t> &dims ) 
+        {
             return Ort::Value::CreateTensor<T>(*memoryInfo,
                                                data, GetTotalSizeFromVector(dims), dims.data(), dims.size());
         }
-        static inline void PrintTensorShape(const std::string &name, Ort::Value &t){
+        static inline void PrintTensorShape(const std::string &name, Ort::Value &t)
+        {
             {
                 std::stringstream ss;
                 for(auto& v : t.GetTensorTypeAndShapeInfo().GetShape())
@@ -31,7 +32,8 @@ namespace PSLAM {
         };
 
         template<typename T, typename T2>
-        static void PrintVector(const std::string &name, const T * data, const std::vector<T2> &dims){
+        static void PrintVector(const std::string &name, const T * data, const std::vector<T2> &dims)
+        {
             assert(dims.size()==2);
             std::stringstream ss;
             ss.precision(3);
@@ -64,7 +66,7 @@ namespace PSLAM {
             printf("%s\n",ss.str().c_str());
         }
 
-        class OnnxModelBase: public PSLAM::ParamLoader {
+        class OnnxModelBase: public GSLAM::ParamLoader {
         public:
             OnnxModelBase(std::string path, Ort::MemoryInfo *memoryInfo):ParamLoader(std::move(path)), mMemoryInfo(memoryInfo){
                 InitModel();

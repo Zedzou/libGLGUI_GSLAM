@@ -4,7 +4,7 @@ set(NAME Assimp)
 set(URL "git@github.com:Zedzou/Assimp.git")
 set(${NAME}_INSTALL_DIR ${CMAKE_BINARY_DIR}/external/${NAME})
 
-if(NOT Assimp_FOUND)
+if(NOT EXISTS ${${NAME}_INSTALL_DIR})
 
     # git clone 
     find_package(Git)
